@@ -1,0 +1,2543 @@
+API Introduction
+Users are welcome to make use of this WEEX API developer documentation.
+
+This document serves as the official reference for WEEX API features which are continuously being updated. Check back regularly for updates!
+
+You can switch between the different API operations by clicking on the top menu. The documentation language can be changed via the language button in the upper right corner.
+
+Request parameters and response result examples are provided on the right side of the documentation.
+
+Previous
+Update log
+Market Making/Quantitative Trading
+We welcome institutional partners with proven market-making strategies and substantial trading volumes to join our Market Maker Program.To apply, please provide the following information in an email to us:
+
+support@weex.com (for market maker application)
+
+Your UID (ensure no commission affiliations exist for this UID)
+
+Screenshots as proof of 30-day market-making volume from other exchanges
+
+A brief description of your market-making strategy (no details required)
+
+FAQ
+Q1：How to get API support?
+
+A : Join our official API support group and our admins will answer your questions.https://t.me/weex_group
+
+Q2：Should I use BTCUSDT_SPBL or BTCUSDT for the symbol parameter？
+
+A : The symbol parameter for all order APIs should use the values returned by the /products interface.
+
+Q3：What is the rate limit of API?
+
+A : 1. The rate limit of each API endpoint is marked on the doc page;2. The rate limit of each API interface is calculated independently;
+
+Q4: Are symbols case-sensitive in API endpoints?
+
+A: Yes. Symbols are case-sensitive and must be in all uppercase letters.
+
+If I forget the passphrase of API key, What should I do?
+
+A: The passphrase of API Key can not be modified, please recreate your API Key.
+
+Preparation
+To use the API, please log in to the web platform, create and configure API keys with proper permissions, then proceed with development and trading as detailed in this documentation.
+
+Click here to create an API Key.
+
+Each user can create up to 10 API Key groups. Each key can be configured for "Read" and/or "Trade" permissions.
+
+Permission details:
+
+Read permission: for data queries such as market data.
+Trade permission: enables order placement, cancellation, and related actions.
+After creating an API Key, securely store the following:
+
+APIKey — The unique identifier for API authentication which is algorithmically generated.
+SecretKey — The system-generated private key for signature encryption.
+Passphrase —A user-defined access phrase. Note: If lost, the Passphrase cannot be recovered. You must create a new API key.
+tip
+You can bind IP addresses to API keys when creating API keys. Unrestricted API keys (with no IP address binding) pose security risks.
+
+warning
+Risk warning: These three keys directly impact account security. Never share your Passphrase. Losing any of these keys may result in asset loss. Delete compromised API keys immediately.
+API Types
+This section categorizes APIs into two types:
+
+Public APIs
+Private APIs
+Public APIs
+
+Public APIs allow users to retrieve configuration and market data.These requests do not require authentication.
+
+Private APIs
+
+Private APIs enable order management and account management.Each private request must be authenticated using a standardized signature method.
+
+Private APIs require validation with your API key.
+
+Access Restrictions
+This section outlines access restrictions:
+
+Rest API: Returns the "429 Too Many Requests" status if the frequency limit is exceeded.
+Rest API
+
+Requests with valid API keys are rate-limited by the API key. Requests without API keys are rate-limited by the public IP address.
+
+Rate limiting rules: The default limit is 10 requests/second unless specified otherwise in individual endpoint documentation.
+
+Special note for batch orders: Placing a batch order comprised of 4 trading pairs with 10 orders each counts as 1 request.
+
+Previous
+API Types
+API Public Parameters
+side(order direction)
+
+Field	Description
+sell	Sell order
+buy	Buy order
+orderType (Order Type)
+
+Field	Description
+limit	Limit order
+market	Market order
+force (Order Type)
+
+Field	Description
+normal	Default order, no special controls needed
+postOnly	Post-only order
+fok	Fill-Or-Kill order
+ioc	Immediate-Or-Cancel order
+status (Order Status)
+
+Field	Description
+new	Unfilled
+partial_fill	Partially filled
+full_fill	All Filled
+cancelled	Canceled
+groupType (Major transaction types)
+
+Field	Description
+deposit	Deposit
+withdraw	Withdraw
+transaction	Trade
+transfer	Transfer
+other	Others
+bizType (Account capital flow operation type)
+
+Field	Description
+deposit	Deposit
+withdraw	Withdraw
+buy	Buy
+sell	Sell
+transfer-in	Inbound transfer
+transfer-out	Outbound transfer
+status (Order status)
+
+Field	Description
+cancel	Canceled
+reject	Rejected
+success	Success
+wallet-fail	Wallet failed
+wallet-processing	Wallet is processing
+first-audit	First review
+recheck	Second review
+first-reject	First review rejected
+recheck-reject	Second review rejected
+type (Withdrawal address query)
+
+Field	Description
+chain-on	On-chain
+inner-transfer	Internal address
+accountType (Account type)
+
+Not case-sensitive
+
+Field	Description
+EXCHANGE	Spot account
+OTC_SGD	OTC account
+CONTRACT	Futures account
+USD_MIX	Quanto swap account
+USDT_MIX	USDT-M perpetual futures account
+Candlestick intervals (granularity)
+
+1min (1 minute)
+5min (5 minutes)
+15min (15 minutes)
+30min (30 minutes)
+1h (1 hour)
+4h (4 hours)
+12h (12 hours)
+1day (1 day)
+1week (1 week)
+
+
+API Domain
+You can use different domain as below Rest API.
+
+Domain Name	API	Description
+Spot REST Domain	https://api-spot.weex.com	Main Domain
+Contract REST Domain	https://api-contract.weex.com	Main Domain
+Signature
+The ACCESS-SIGN request header is generated by using the HMAC SHA256 method encryption on the timestamp + method.toUpperCase() + requestPath + "?" + queryString + body string (+ denotes string concatenation), and putting the result through BASE64 encoding.
+
+Signature Field Description
+
+timestamp: This matches the ACCESS-TIMESTAMP header.
+method: The request method (POST/GET), with all letters in uppercase.
+requestPath: API endpoint path.
+queryString: The query parameters after the "?" in the URL.
+body: The string that corresponds to the request body (omitted if empty, typically for GET requests).
+Signature format rules if queryString is empty
+
+timestamp + method.toUpperCase() + requestPath + body
+Signature format rules if queryString is not empty
+
+timestamp + method.toUpperCase() + requestPath + "?" + queryString + body
+Examples
+
+Fetching market depth, using BTCUSDT as an example:
+
+Timestamp = 1591089508404
+Method = "GET"
+requestPath = "/api/v2/market/depth"
+queryString= "?symbol=btcusdt_spbl&limit=20"
+Generate the string to be signed:
+
+'1591089508404GET/api/v2/market/depth?symbol=btcusdt_spbl&limit=20'
+Placing an order, using BTCUSDT_SPBL as an example:
+
+Timestamp = 1561022985382
+
+Method = "POST"
+
+requestPath = "/api/v2/order/order"
+
+body =
+
+{"symbol":"btcusdt_spbl","quantity":"8","side":"buy","price":"1","orderType":"limit","clientOrderId":"ww#123456"}
+
+
+Generate the string to be signed:
+
+'1561022985382POST/api/spotPro/v3/order/order{"symbol":"btcusdt_spbl","size":"8","side":"buy","price":"1","orderType":"limit","clientOrderId":"ww#123456"}'
+
+
+Steps to generate the final signature
+
+Encrypt the unsigned string with HMAC SHA256 using your secretKey
+Signature = hmac_sha256(secretkey, Message)
+Encode the signature using Base64
+Signature = base64.encode(Signature)
+
+
+Request Processing
+Java
+Python
+import time
+import hmac
+import hashlib
+import base64
+import requests
+import json
+
+api_key = ""
+secret_key = ""
+access_passphrase = ""
+
+
+def generate_signature(secret_key, timestamp, method, request_path, query_string, body):
+message = timestamp + method.upper() + request_path + query_string + str(body)
+signature = hmac.new(secret_key.encode(), message.encode(), hashlib.sha256).digest()
+# print(base64.b64encode(signature).decode())
+return base64.b64encode(signature).decode()
+
+
+def generate_signature_get(secret_key, timestamp, method, request_path, query_string):
+message = timestamp + method.upper() + request_path + query_string
+signature = hmac.new(secret_key.encode(), message.encode(), hashlib.sha256).digest()
+# print(base64.b64encode(signature).decode())
+return base64.b64encode(signature).decode()
+
+
+def send_request_post(api_key, secret_key, access_passphrase, method, request_path, query_string, body):
+timestamp = str(int(time.time() * 1000))
+# print(timestamp)
+body = json.dumps(body)
+signature = generate_signature(secret_key, timestamp, method, request_path, query_string, body)
+
+    headers = {
+        "ACCESS-KEY": api_key,
+        "ACCESS-SIGN": signature,
+        "ACCESS-TIMESTAMP": timestamp,
+        "ACCESS-PASSPHRASE": access_passphrase,
+        "Content-Type": "application/json",
+        "locale": "zh-CN"
+    }
+
+    url = "https://contract-openapi.weex.com"  # Please replace with the actual API address
+    if method == "GET":
+        response = requests.get(url + request_path, headers=headers)
+    elif method == "POST":
+        response = requests.post(url + request_path, headers=headers, data=body)
+    return response
+
+def send_request_get(api_key, secret_key, access_passphrase, method, request_path, query_string):
+timestamp = str(int(time.time() * 1000))
+# print(timestamp)
+signature = generate_signature_get(secret_key, timestamp, method, request_path, query_string)
+
+    headers = {
+        "ACCESS-KEY": api_key,
+        "ACCESS-SIGN": signature,
+        "ACCESS-TIMESTAMP": timestamp,
+        "ACCESS-PASSPHRASE": access_passphrase,
+        "Content-Type": "application/json",
+        "locale": "zh-CN"
+    }
+
+    url = "https://contract-openapi.weex.com"  # Please replace with the actual API address
+    if method == "GET":
+        response = requests.get(url + request_path, headers=headers)
+    return response
+
+
+# Example of calling a GET request
+request_path = "/api/spot/v1/account/assets"
+# request_path = "/api/spot/v1/public/currencies"
+query_string = ''
+body = ''
+response = send_request_get(api_key, secret_key, access_passphrase, "GET", request_path, query_string)
+
+# Example of calling a POST request
+# request_path = "/api/spot/v1/trade/fills"
+# body = {"symbol": "ETHUSDT_SPBL", "limit": "2"}
+# query_string = ""
+# response = send_request_post(api_key, secret_key, access_passphrase, "POST", request_path, query_string, body)
+
+print(response.status_code)
+print(response.text)
+
+
+All requests are based on the HTTPS protocol. The Content-Type in the request headers must be set to 'application/json'.
+
+Request Processing
+
+Request parameters: Parameter encapsulation according to endpoint request parameter specification.
+Submit request: Submit the encapsulated parameters to the server via GET/POST.
+Server response: The server first performs security checks on the request data, and after passing the check, returns the response data to the user in the JSON format based on the operation logic.
+Data processing: Process the server response data.
+Success
+
+HTTP 200 status codes indicates success and may contain content.Response content (if any) will be included in the returned data.
+
+Common error codes
+
+400 Bad Request – Invalid request format
+401 Unauthorized – Invalid API Key
+403 Forbidden – You do not have access to the requested resource
+404 Not Found — No requests found
+429 Too Many Requests – Rate limit exceeded
+500 Internal Server Error – We had a problem with our server
+Failed responses include error descriptions in the body.
+Standard Specifications
+Timestamp
+
+The ACCESS-TIMESTAMP in request signatures is in milliseconds.Requests are rejected if the timestamp deviates by over 30 seconds from the API server time. If the local server time deviates significantly from the API server time, we recommend updating the HTTP header by querying the API server time.
+
+Rate limiting rules
+
+Too frequent requests will be rate-limited automatically and return the 429 status code in the HTTP header.
+
+Public endpoints (such as market data endpoints): Uniform frequency of up to 20 requests per 2 seconds.
+Authorization endpoints: Rate limits are based on the API key (see endpoint-specific rules).
+Request formats
+
+Only two request methods are supported: GET and POST
+
+GET: Parameters are sent via queryString in the path to the server.
+POST: Parameters are sent as a JSON-formatted body to the server.
+Get Server Time
+HTTP Request Retrieve the server's current timestamp.
+
+GET /api/v2/public/time
+Rate limit: 20 requests/second
+
+Request parameters
+
+NONE
+
+Request example
+
+curl "https://api-spot.weex.com/api/v2/public/time"
+
+
+Response parameters
+
+Field Name	Type	Field Description
+data	Long	Server time
+Response example
+
+{
+    "code": "00000",
+    "msg": "success",
+    "requestTime": 1622097118135,
+    "data": 1622097118134
+}
+
+Basic Crypto Information
+HTTP Request Retrieve all crypto information on the platform
+
+GET /api/v2/public/currencies
+Rate limit: 20 requests/second
+
+Request parameters
+
+NONE
+
+Request example
+
+curl "https://api-spot.weex.com/api/v2/public/currencies"
+
+
+Response parameters
+
+Field	Field Description
+coinId	Crypto ID
+coinName	Name of the crypto
+transfer	Whether transfer is supported
+chains	Blockchain information
+> chain	Name of the blockchain
+> needTag	Whether a tag is required
+> withdrawAble	Whether withdrawals are enabled
+> rechargeAble	Whether deposits are enabled
+> withdrawFee	Withdrawal transaction fee
+> depositConfirm	Number of block confirmations required for deposits
+> withdrawConfirm	Number of block confirmations required for withdrawals
+> minDepositAmount	Minimum deposit amount
+> minWithdrawAmount	Minimum withdrawal amount
+> browserUrl	Blockchain explorer URL for the network
+Response example
+
+{
+    "code":"00000",
+    "msg":"success",
+    "requestTime":1622097139437,
+    "data":[
+        {
+            "coinId":"1",
+            "coinName":"BTC",
+            "transfer":"true",
+            "chains":[
+                {
+                    "chain":null,
+                    "needTag":"false",
+                    "withdrawAble":"true",
+                    "rechargeAble":"true",
+                    "withdrawFee":"0.005",
+                    "depositConfirm":"1",
+                    "withdrawConfirm":"1",
+                    "minDepositAmount":"0.001",
+                    "minWithdrawAmount":"0.001",
+                    "browserUrl":"https://blockchair.com/bitcoin/testnet/transaction/"
+                }
+            ]
+        },
+        {
+            "coinId":"2",
+            "coinName":"USDT",
+            "transfer":"true",
+            "chains":[
+                {
+                    "chain":"ERC20",
+                    "needTag":"false",
+                    "withdrawAble":"true",
+                    "rechargeAble":"true",
+                    "withdrawFee":"0.01",
+                    "depositConfirm":"12",
+                    "withdrawConfirm":"1",
+                    "minDepositAmount":"0.1",
+                    "minWithdrawAmount":"0.1",
+                    "browserUrl":"https://ropsten.etherscan.io/tx/"
+                }
+            ]
+        }
+    ]
+}
+API Default Symbol
+HTTP Request Retrieve the trading pairs available for API trading on the platform
+
+GET /api/v2/public/products
+Rate limit: 20 requests/second
+
+Request parameters
+
+NONE
+
+Request example
+
+curl "https://api-spot.weex.com/api/v2/public/products"
+
+
+Response parameters
+
+Field Name	Type	Field Description
+data	array	Trading pairs supported for API trading
+Response example
+
+{
+  "code": "00000",
+  "data": ["ETHUSDC_SPBL", "BTCUSDT_SPBL"],
+  "msg": "success",
+  "requestTime": "1743647243696"
+}
+Get Symbol Info
+HTTP Request Get trading pair information, supporting individual, multiple, and full queries
+
+GET /api/v2/public/exchangeInfo
+Rate limit: 20 requests/second
+
+Request parameters
+
+Parameter	Parameter type	Required?	Description
+symbol	String	No	Trading pair name, e.g. BTCUSDT_SPBL
+symbols	String	No	Multiple trading pair names,e.g. BTCUSDT_SPBL,ETHUSDC_SPBL
+Request example
+
+curl "https://api-spot.weex.com/api/v2/public/exchangeInfo?symbol=BTCUSDT_SPBL"
+
+
+curl "https://api-spot.weex.com/api/v2/public/exchangeInfo?symbols=BTCUSDT_SPBL,ETHUSDC_SPBL"
+
+
+Response parameters
+
+Field Name	Type	Field Description
+symbol	String	Trading pair
+baseCoin	String	Base currency
+quoteCoin	String	Quote currency
+tickSize	String	Minimum price increment (for quoteCoin)
+stepSize	String	Minimum quantity increment (for baseCoin)
+minTradeAmount	String	Minimum trade amount
+maxTradeAmount	String	Maximum trade amount
+takerFeeRate	String	Taker fee rate
+makerFeeRate	String	Maker fee rate
+buyLimitPriceRatio	String	Buy limit price ratio
+sellLimitPriceRatio	String	Sell limit price ratio
+marketBuyLimitSize	String	Market order buy size limit
+marketSellLimitSize	String	Market order sell size limit
+marketFallbackPriceRatio	String	Market order fallback price ratio
+enableTrade	Boolean	Whether trading is enabled
+enableDisplay	Boolean	Whether display is enabled
+displayDigitMerge	String	Depth aggregation (e.g.: "1,0.1,0.001")
+displayNew	Boolean	Whether newly listed pair
+displayHot	Boolean	Whether hot trading pair
+supportTracing	Boolean	Whether copy trading is supported
+supportPlanMarket	Boolean	Whether market orders are supported in conditional orders
+Response example
+
+{
+  "code": "00000",
+  "msg": "success",
+  "requestTime": 1743661516052,
+  "data": [
+    {
+      "symbol": "BTCUSDT_SPBL",
+      "baseCoin": "BTC",
+      "quoteCoin": "USDT",
+      "tickSize": "0.1",
+      "stepSize": "0.00000001",
+      "minTradeAmount": "0.00001",
+      "maxTradeAmount": "99999",
+      "takerFeeRate": "0.001",
+      "makerFeeRate": "0",
+      "buyLimitPriceRatio": "0.99",
+      "sellLimitPriceRatio": "0.99",
+      "marketBuyLimitSize": "99999",
+      "marketSellLimitSize": "99999",
+      "marketFallbackPriceRatio": "0",
+      "enableTrade": true,
+      "enableDisplay": true,
+      "displayDigitMerge": "",
+      "displayNew": false,
+      "displayHot": false,
+      "supportTracing": true,
+      "supportPlanMarket": true
+    }
+  ]
+}
+Get Single Ticker
+HTTP request Retrieve single ticker data
+
+GET /api/v2/market/ticker
+Rate limit: 20 requests/second
+
+Request parameters
+
+Parameter	Parameter type	Required?	Description
+symbol	String	Yes	Trading pair name
+Request example
+
+curl "https://api-spot.weex.com/api/v2/market/ticker?symbol=BTCUSDT_SPBL"
+
+
+Response parameters
+
+Field Name	Type	Field Description
+symbol	String	Trading pair name
+priceChange	String	Price change amount
+priceChangePercent	String	Price change percentage
+trades	long	24-hour trade count
+size	String	24-hour trading volume (quantity)
+value	String	24-hour trading value (amount)
+high	String	24-hour highest price
+low	String	24-hour lowest price
+open	String	Opening price (24-hour period)
+close	String	Closing price (24-hour period)
+highTime	long	Timestamp of 24-hour high
+lowTime	long	Timestamp of 24-hour low
+startTime	long	Start timestamp of 24-hour period
+endTime	long	End timestamp of 24-hour period
+lastPrice	String	Last traded price
+markPrice	String	Current mark price (for derivatives)
+indexPrice	String	Current index price
+openInterest	String	Open interest (for derivatives)
+ts	long	System timestamp
+Response example
+
+{
+  "code": "00000",
+  "msg": "success",
+  "requestTime": 1743665793483,
+  "data": {
+    "symbol": "BTCUSDT_SPBL",
+    "priceChange": "-965.6",
+    "priceChangePercent": "-0.011451",
+    "trades": 105901,
+    "size": "78570.57284800",
+    "value": "6731333236.9492884000",
+    "high": "88495.5",
+    "low": "82175.9",
+    "open": "84319.6",
+    "close": "83354.0",
+    "highTime": 1743625002550,
+    "lowTime": 1743638655112,
+    "startTime": 1743576300000,
+    "endTime": 1743665400000,
+    "lastPrice": "83354.0",
+    "markPrice": "0",
+    "indexPrice": "0",
+    "openInterest": "0",
+    "ts": 1750060557824
+  }
+}
+
+Get All Ticker
+HTTP request Retrieve all ticker data
+
+GET /api/v2/market/tickers
+Rate limit: 20 requests/second
+
+Request parameters
+
+NONE
+
+Request example
+
+curl "https://api-spot.weex.com/api/v2/market/tickers"
+
+
+Response parameters
+
+Field Name	Type	Field Description
+symbol	String	Trading pair name
+priceChange	String	Price change amount
+priceChangePercent	String	Price change percentage
+trades	long	24-hour trade count
+size	String	24-hour trading volume (quantity)
+value	String	24-hour trading value (amount)
+high	String	24-hour highest price
+low	String	24-hour lowest price
+open	String	Opening price (24-hour period)
+close	String	Closing price (24-hour period)
+highTime	long	Timestamp of 24-hour high
+lowTime	long	Timestamp of 24-hour low
+startTime	long	Start timestamp of 24-hour period
+endTime	long	End timestamp of 24-hour period
+lastPrice	String	Last traded price
+markPrice	String	Current mark price (for derivatives)
+indexPrice	String	Current index price
+openInterest	String	Open interest (for derivatives)
+ts	long	System timestamp
+Get Trades
+HTTP request Retrieve trade data
+
+GET /api/v2/market/fills
+Rate limit: 20 requests/second
+
+Request parameters
+
+Parameter	Parameter type	Required?	Description
+symbol	String	Yes	Trading pair ID
+limit	String	No	Default: 100, max: 1,000
+Request example
+
+curl "https://api-spot.weex.com/api/v2/market/fills?symbol=BTCUSDT_SPBL&limit=1"
+
+
+Response parameters
+
+Field Name	Type	Field Description
+symbol	String	Trading pair symbol
+tradeId	String	Trade order ID
+fillTime	long	Trade execution timestamp
+fillPrice	String	Execution price
+fillQuantity	String	Executed quantity
+tradeValue	String	Total trade value (price × quantity)
+bestMatch	boolean	Whether fully matched
+buyerMaker	boolean	Whether buyer was the maker
+Response example
+
+{
+    "code": "00000",
+    "msg": "success",
+    "requestTime": 1743668717640,
+    "data": [
+        {
+            "symbol": "BTCUSDT_SPBL",
+            "tradeId": "778a5376-a0b6-4c8f-ab64-dd6ea40f896e",
+            "fillTime": 1743668713364,
+            "fillPrice": "83609.7",
+            "fillQuantity": "0.00011400",
+            "tradeValue": "9.531505800",
+            "bestMatch": true,
+            "buyerMaker": true
+        }
+    ]
+}
+Get Candlestick Data
+HTTP request Retrieve candlestick data
+
+GET /api/v2/market/candles
+Rate limit: 20 requests/second
+
+Request parameters
+
+Parameter	Parameter type	Required?	Description
+symbol	String	Yes	Futures name
+period	String	Yes	Candlestick interval, valid values include: [1m,5m,15m,30m,1h,2h,4h,6h,8h,12h,1d,1w,1M]
+limit	String	No	Number of results
+Request example
+
+curl "https://api-spot.weex.com/api/v2/market/candles?symbol=BTCUSDT_SPBL&period=30m&limit="
+
+
+Response parameters
+
+Field Name	Type	Field Description
+0	long	System timestamp (ms)
+1	String	Opening price
+2	String	Highest price
+3	String	Lowest price
+4	String	Closing price
+5	String	Trading volume
+6	String	Trading turnover
+Response example
+
+{
+  "code": "00000",
+  "msg": "success",
+  "requestTime": 1743669821003,
+  "data": [
+    [
+      1743669000000,
+      "83654.0",
+      "83778.0",
+      "83531.5",
+      "83688.7",
+      "248.17024800",
+      "20755885.859164900"
+    ],
+    [
+      1743667200000,
+      "83457.9",
+      "83719.0",
+      "83457.9",
+      "83654.0",
+      "247.94000200",
+      "20730711.264144200"
+    ]
+  ]
+}
+
+Get OrderBook Depth
+HTTP request Retrieve depth data
+
+GET /api/v2/market/depth
+Rate limit: 20 requests/second
+
+Request parameters
+
+Parameter	Parameter type	Required?	Description
+symbol	String	Yes	Futures name
+type	String	No	Default: step0: no aggregation.Values: step0, step1, step2, step3, step4, step5
+limit	String	No	Number of entries (Only 15 and 200)
+Request example
+
+curl "https://api-spot.weex.com/api/v2/market/depth?symbol=BTCUSDT_SPBL&type=step0&limit="
+
+
+Response parameters
+
+Field Name	Type	Field Description
+asks	array	Ask [Price, Quantity]
+bids	array	Bid [Price, Quantity]
+Response example
+
+{
+    "code":"00000",
+    "msg":"success",
+    "requestTime":1622102974025,
+    "data":{
+        "asks":[
+            [
+                "38084.5",
+                "0.0039"
+            ],
+            [
+                "38085.7",
+                "0.0018"
+            ],
+            [
+                "38086.7",
+                "0.0310"
+            ],
+            [
+                "38088.2",
+                "0.5303"
+            ]
+        ],
+        "bids":[
+            [
+                "38073.7",
+                "0.4993000000000000"
+            ],
+            [
+                "38073.4",
+                "0.4500"
+            ],
+            [
+                "38073.3",
+                "0.1179"
+            ],
+            [
+                "38071.5",
+                "0.2162"
+            ]
+        ],
+        "timestamp":"1622102974025"
+    }
+}
+
+Get Account Assets
+HTTP request Retrieve account assets
+
+GET /api/v2/account/assets
+Rate limit: 10 requests/second
+
+Request parameters
+
+NONE
+
+Request example
+
+curl "https://api-spot.weex.com/api/v2/account/assets" \
+   -H "ACCESS-KEY:*******" \
+   -H "ACCESS-SIGN:*******" \
+   -H "ACCESS-PASSPHRASE:*****" \
+   -H "ACCESS-TIMESTAMP:1659076670000" \
+   -H "locale:zh-CN" \
+   -H "Content-Type: application/json"
+
+
+Response parameters
+
+Field Name	Type	Field Description
+coinId	Integer	Crypto ID
+coinName	String	Name of the crypto
+available	String	Available asset
+frozen	String	Frozen asset
+equity	String	Total asset
+Response example
+
+{
+  "code": "00000",
+  "msg": "success",
+  "requestTime": 1743729400189,
+  "data": [{
+    "coinId": 1,
+    "coinName": "BTC",
+    "available": "0.0040000000000000",
+    "frozen": "0",
+    "equity": "0.0040000000000000"
+  }, {
+    "coinId": 2,
+    "coinName": "USDT",
+    "available": "10000999657.8927028500000000",
+    "frozen": "0",
+    "equity": "10000999657.8927028500000000"
+  }]
+}
+Get Account Bills
+HTTP request Get Account Bills
+
+POST /api/v2/account/bills
+Rate limit: 10 requests/second
+
+Request parameters
+
+Parameter	Parameter type	Required?	Description
+coinId	Integer	No	Crypto ID
+bizType	String	No	Business type
+deposit: Deposit
+withdraw: Withdrawal
+transfer_in: Transfer-in
+transfer_out: Transfer-out
+trade_in Asset: purchase
+trade_out: Asset sale
+order_fill_fee_income: Fee income
+order_liquidate_fee_income: Liquidation fee income
+after	String	No	Records created AFTER this timestamp
+before	String	No	Records created BEFORE this timestamp
+limit	Integer	No	Number of results, default: 10, maximum: 100.
+Request example
+
+curl -X POST "https://api-spot.weex.com/api/v2/account/bills?coinId=22" \
+   -H "ACCESS-KEY:*******" \
+   -H "ACCESS-SIGN:*******" \
+   -H "ACCESS-PASSPHRASE:*****" \
+   -H "ACCESS-TIMESTAMP:1659076670000" \
+   -H "locale:zh-CN" \
+   -H "Content-Type: application/json" \
+   -d '{"coinId": 1}'
+
+
+Response parameters
+
+Field Name	Type	Field Description
+billId	String	Bill ID
+coinId	Integer	Currency ID
+coinName	String	Currency name
+bizType	String	Business type
+fillSize	String	Filled quantity
+fillValue	String	Filled value
+deltaAmount	String	Balance change amount
+afterAmount	String	Post-transaction balance
+fees	String	Transaction fee
+cTime	String	Creation timestamp
+Response example
+
+{
+  "code": "00000",
+  "msg": "success",
+  "requestTime": 1743732387987,
+  "data": [{
+    "billId": "601797854712824762",
+    "coinId": 1,
+    "coinName": "BTC",
+    "bizType": "transfer_in",
+    "fillSize": "0",
+    "fillValue": "0",
+    "deltaAmount": "0.0040000000000000",
+    "afterAmount": "0.0040000000000000",
+    "fees": "0",
+    "cTime": "1743479789427"
+  }]
+}
+Get Transfer Record
+HTTP request Get Transfer Record
+
+GET /api/v2/account/transferRecords
+Rate limit: 10 requests/second
+
+Request parameters
+
+Parameter	Parameter type	Required?	Description
+coinId	Integer	No	Crypto ID
+fromType	String	No	Account type (accountType)
+after	Long	No	Pass to tradeTime and retrieve the data before this tradeTime.
+before	Long	No	Pass to tradeTime and retrieve the data after this tradeTime.
+limit	Integer	No	Number of results, default: 100, maximum: 500.
+Request example
+
+curl "https://api-spot.weex.com/api/v2/account/transferRecords?coinId=22" \
+   -H "ACCESS-KEY:*******" \
+   -H "ACCESS-SIGN:*******" \
+   -H "ACCESS-PASSPHRASE:*****" \
+   -H "ACCESS-TIMESTAMP:1659076670000" \
+   -H "locale:zh-CN" \
+   -H "Content-Type: application/json"
+
+
+Response parameters
+
+Field	Field Description
+coinName	Name of the crypto
+status	Transfer status
+toType	Recipient account type (accountType)
+toSymbol	Trading pair of the recipient account
+fromType	Sender account type (accountType)
+fromSymbol	Trading pair of the sender account
+amount	Quantity
+tradeTime	Time of trade (timestamp in milliseconds)
+Response example
+
+{
+    "code":"00000",
+    "data":[
+        {
+            "coinName":"btc",
+            "status":"SUCCESS",
+            "toType":"USD_MIX",
+            "toSymbol":"",
+            "fromType":"CONTRACT",
+            "fromSymbol":"BTC/USD",
+            "amount":"1000.00000000",
+            "tradeTime":"1631070374488"
+        }
+    ],
+    "msg":"success",
+    "requestTime":1631608142260
+}
+Place Order
+HTTP request Order endpoint
+
+POST /api/v2/trade/orders
+Rate limit: 10 requests/second
+
+Request parameters
+
+Parameter	Parameter type	Required?	Description
+symbol	String	Yes	Trading pairs. For details, view: /products)
+side	String	Yes	Order direction
+buy: Buy
+sell: Sell
+orderType	String	Yes	Order type
+limit: Limit order
+market: Market order
+force	String	Yes	Order execution type (It is invalid when orderType is market)
+normal: Normal limit order, good till cancelled
+postOnly: Post-only order (maker only)
+fok: Fill or kill
+ioc: Immediate or cancel
+price	String	No	Limit price (required when orderType is 'limit')
+quantity	String	Yes	Order amount
+clientOrderId	String	Yes	Customizable order ID
+Request example
+
+curl -X POST "https://api-spot.weex.com/api/v2/trade/orders" \
+   -H "ACCESS-KEY:*******" \
+   -H "ACCESS-SIGN:*******" \
+   -H "ACCESS-PASSPHRASE:*****" \
+   -H "ACCESS-TIMESTAMP:1659076670000" \
+   -H "locale:zh-CN" \
+   -H "Content-Type: application/json" \
+   -d '{
+	"symbol": "BTCUSDT_SPBL",
+	"side": "buy",
+	"orderType": "market",
+	"force": "normal",
+	"price": "0",
+	"quantity": "10",
+	"clientOrderId": "202504041121509751743736910566"
+}'
+
+
+Response parameters
+
+Field Name	Type	Field Description
+orderId	Long	Order ID
+clientOrderId	String	Customizable order ID
+Response example
+
+{
+  "code": "00000",
+  "msg": "success",
+  "requestTime": 1743736915184,
+  "data": {
+    "orderId": 602876318261969338,
+    "clientOrderId": "202504041121509751743736910566"
+  }
+}
+Batch Place Orders
+HTTP request Batch orders
+
+POST /api/v2/trade/batch-orders
+Rate limit: 10 requests/second
+
+Request parameters
+
+Parameter	Parameter type	Required?	Description
+symbol	String	Yes	Trading pairs. For details, view:/products
+orderList	List	Yes	Order list
+orderList parameter
+Parameter	Parameter type	Required?	Description
+side	String	Yes	Order direction
+buy: Buy
+sell: Sell
+orderType	String	Yes	Order type
+limit: Limit order
+market: Market order
+force	String	Yes	Order execution type (It is invalid when orderType is market)
+normal: Normal limit order, good till cancelled
+postOnly: Post-only order (maker only)
+fok: Fill or kill
+ioc: Immediate or cancel
+price	String	No	Limit price (required when orderType is 'limit')
+quantity	String	Yes	Order amount
+clientOrderId	String	Yes	Customizable order ID
+Request example
+
+curl -X POST "https://api-spot.weex.com/api/v2/trade/batch-orders" \
+   -H "ACCESS-KEY:*******" \
+   -H "ACCESS-SIGN:*******" \
+   -H "ACCESS-PASSPHRASE:*****" \
+   -H "ACCESS-TIMESTAMP:1659076670000" \
+   -H "locale:zh-CN" \
+   -H "Content-Type: application/json" \
+   -d '{"symbol": "BTCUSDT_SPBL",
+	"orderList": [{
+		"side": "sell",
+		"orderType": "limit",
+		"force": "normal",
+		"price": "100000",
+		"quantity": "1",
+		"clientOrderId": "202504041144444401743738284072"
+	}]
+}'
+
+
+Response parameters
+
+Field Name	Type	Field Description
+resultList	array	array
+> orderId	long	Order ID
+> clientOrderId	String	Customizable order ID
+Response example
+
+{
+  "code": "00000",
+  "msg": "success",
+  "requestTime": 1743738287975,
+  "data": {
+    "resultList": [{
+      "orderId": 602882076026339770,
+      "clientOrderId": "202504041144444401743738284072"
+    }]
+  }
+}
+Cancel Order
+HTTP request Cancel order
+
+POST /api/v2/trade/cancel-order
+Rate limit: 10 requests/second
+
+Request parameters
+
+Parameter	Parameter type	Required?	Description
+symbol	String	Yes	Trading pair. For details, view: /products
+orderId	String	No	Either Order ID or clientOid is required.
+clientOid	String	No	Either Client customized ID or orderId is required.
+Request example
+
+curl -X POST "https://api-spot.weex.com/api/v2/trade/cancel-order" \
+   -H "ACCESS-KEY:*******" \
+   -H "ACCESS-SIGN:*" \
+   -H "ACCESS-PASSPHRASE:*" \
+   -H "ACCESS-TIMESTAMP:1659076670000" \
+   -H "locale:zh-CN" \
+   -H "Content-Type: application/json" \
+   -d '{"symbol": "WXTUSDT_SPBL","orderId": "602882076026339770"}'
+
+
+Response parameters
+
+Field Name	Type	Field Description
+order_id	String	Order ID
+client_oid	String	Client order ID
+symbol	String	Trading pair
+result	Boolean	Cancellation result
+err_code	String	Error code
+err_msg	String	Error message
+Response example
+
+{
+  "code": "00000",
+  "msg": "success",
+  "requestTime": 1743740792018,
+  "data": {
+    "order_id": "602882076026339770",
+    "client_oid": null,
+    "symbol": "WXTUSDT_SPBL",
+    "result": true,
+    "err_code": null,
+    "err_msg": null
+  }
+}
+Batch Cancel Orders
+HTTP request Batch cancel orders (single pair)
+
+POST /api/v2/trade/cancel-batch-orders
+Rate limit: 10 requests/second
+
+Request parameters
+
+Parameter	Parameter type	Required?	Description
+symbol	String	Yes	Trading pair. For details, view:/products
+orderIds	String[]	No	Either Order ID or clientOids is required.
+clientOids	String[]	No	Either Client customized ID or orderIds is required.
+Request example
+
+curl -X POST "https://api-spot.weex.com/api/v2/trade/cancel-batch-orders" \
+   -H "ACCESS-KEY:*******" \
+   -H "ACCESS-SIGN:*" \
+   -H "ACCESS-PASSPHRASE:*" \
+   -H "ACCESS-TIMESTAMP:1659076670000" \
+   -H "locale:zh-CN" \
+   -H "Content-Type: application/json" \
+   -d '{"symbol": "WXTUSDT_SPBL",
+   "orderIds": ["602926152964637114","602914146790408634"]
+   }'
+
+
+Response parameters
+
+Field Name	Type	Field Description
+successList	Array	Successful orders array
+failureList	Array	Failed orders array
+> orderId	String	Order ID
+> clientOid	String	Either Client customized ID
+> errMsg	String	Error message
+Response example
+
+{
+	"code": "00000",
+	"msg": "success",
+	"requestTime": 1743748830875,
+	"data": {
+		"successList": ["602926152964637114"],
+		"failureList": [{
+			"errMsg": "FAILED_ORDER_NOT_FOUND",
+			"orderId": "602914146790408634"
+		}]
+	}
+} 
+Cancel Order by Symbol
+HTTP request Cancel Order by Symbol
+
+POST /api/v2/trade/cancel-symbol-order
+Rate limit: 10 requests/second
+
+Request parameters
+
+Parameter	Parameter type	Required?	Description
+symbol	String	Yes	Trading pair. For details, view:/products
+Request example
+
+curl -X POST "https://api-spot.weex.com/api/v2/trade/cancel-symbol-order" \
+   -H "ACCESS-KEY:*******" \
+   -H "ACCESS-SIGN:*" \
+   -H "ACCESS-PASSPHRASE:*" \
+   -H "ACCESS-TIMESTAMP:1659076670000" \
+   -H "locale:zh-CN" \
+   -H "Content-Type: application/json" \
+   -d '{"symbol": "WXTUSDT_SPBL"
+   }'
+
+
+Response parameters
+
+Field Name	Type	Field Description
+successList	Array	Successful orders array
+failureList	Array	Failed orders array
+> orderId	String	Order ID
+> errMsg	String	Error message
+Response example
+
+{
+	"code": "00000",
+	"msg": "success",
+	"requestTime": 1743748830875,
+	"data": {
+		"successList": ["602926152964637114"],
+		"failureList": [{
+			"errMsg": "FAILED_ORDER_NOT_FOUND",
+			"orderId": "602914146790408634"
+		}]
+	}
+} 
+Get Order Info
+HTTP request Fetch order by order ID or customizable order ID
+
+POST /api/v2/trade/orderInfo
+Rate limit: 10 requests/second
+
+Request parameters
+
+Parameter	Parameter type	Required?	Description
+orderId	String	No	Either Order ID or clientOrderId is required.
+clientOrderId	String	No	Either Client customized ID or orderId is required.
+Request example
+
+curl -X POST "https://api-spot.weex.com/api/v2/trade/orderInfo" \
+   -H "ACCESS-KEY:*******" \
+   -H "ACCESS-SIGN:*" \
+   -H "ACCESS-PASSPHRASE:*" \
+   -H "ACCESS-TIMESTAMP:1659076670000" \
+   -H "locale:zh-CN" \
+   -H "Content-Type: application/json" \
+   -d '{"orderId": "602928955330134458"}'
+
+
+Response parameters
+
+Field Name	Type	Field Description
+accountId	String	Account ID
+symbol	String	Trading pair
+orderId	String	Order ID
+clientOrderId	String	Client order ID
+price	String	Order price
+quantity	String	Order quantity
+orderType	String	Order type
+side	String	Order side
+status	String	Order status
+latestFillPrice	String	Latest execution price
+maxFillPrice	String	Highest execution price
+minFillPrice	String	Lowest execution price
+fillQuantity	String	Filled quantity
+fillTotalAmount	String	Total filled amount
+cTime	String	Creation time
+uTime	String	Update time
+Response example
+
+{
+  "code": "00000",
+  "msg": "success",
+  "requestTime": 1743754256238,
+  "data": [{
+    "accountId": "590105411156181178",
+    "symbol": "WXTUSDT_SPBL",
+    "orderId": "602928955330134458",
+    "clientOrderId": "202504041451014391743749461316",
+    "price": "100.000000",
+    "quantity": "10",
+    "orderType": "limit",
+    "side": "sell",
+    "status": "open",
+    "latestFillPrice": "0",
+    "maxFillPrice": "0",
+    "minFillPrice": "0",
+    "fillQuantity": "0",
+    "fillTotalAmount": "0",
+    "cTime": "1743749464829",
+    "uTime": "1743749464834"
+  }]
+}
+Get Current Orders
+HTTP request Fetch open orders (unfilled and partially filled)
+
+POST /api/v2/trade/open-orders
+Rate limit: 10 requests/second
+
+Request parameters
+
+Parameter	Parameter type	Required?	Description
+symbol	String	Yes	Trading pair. For details, view:/products
+limit	Integer	No	Number of records to retrieve. Must be greater than 0 and less than or equal to 100.
+pageNo	Integer	No	Page number (starting from 0, default 0)
+Request example
+
+curl -X POST "https://api-spot.weex.com/api/v2/trade/open-orders" \
+   -H "ACCESS-KEY:*******" \
+   -H "ACCESS-SIGN:*******" \
+   -H "ACCESS-PASSPHRASE:*****" \
+   -H "ACCESS-TIMESTAMP:1659076670000" \
+   -H "locale:zh-CN" \
+   -H "Content-Type: application/json" \
+   -d '{"symbol": "WXTUSDT_SPBL"}'
+
+
+Response parameters
+
+Field Name	Type	Field Description
+accountId	String	Account ID
+symbol	String	Trading pair
+orderId	String	Order ID
+clientOrderId	String	Client order ID
+price	String	Order price
+quantity	String	Order quantity
+orderType	String	Order type
+side	String	Order side
+status	String	Order status
+latestFillPrice	String	Latest execution price
+maxFillPrice	String	Highest execution price
+minFillPrice	String	Lowest execution price
+fillQuantity	String	Filled quantity
+fillTotalAmount	String	Total filled amount
+cTime	String	Creation time
+uTime	String	Update time
+Response example
+
+{
+  "code": "00000",
+  "msg": "success",
+  "requestTime": 1743753174247,
+  "data": {
+    "orderInfoResultList": [{
+      "accountId": "590105411156181178",
+      "symbol": "WXTUSDT_SPBL",
+      "orderId": "602941812964852154",
+      "clientOrderId": "202504040742105191743752530280",
+      "price": "100.000000",
+      "quantity": "10",
+      "orderType": "limit",
+      "side": "sell",
+      "status": "open",
+      "latestFillPrice": "0",
+      "maxFillPrice": "0",
+      "minFillPrice": "0",
+      "fillQuantity": "0",
+      "fillTotalAmount": "0",
+      "cTime": "1743752530328",
+      "uTime": "1743752530334"
+    }],
+    "nextPage": null,
+    "totals": null
+  }
+}
+Get History Orders
+HTTP request Fetch order history list
+
+POST /api/v2/trade/history
+Rate limit: 10 requests/second
+
+Request parameters
+
+Parameter	Parameter type	Required?	Description
+symbol	String	Yes	Trading pair. For details, view: /products
+after	Long	No	Start timestamp (in milliseconds)
+before	Long	No	End timestamp (in milliseconds)
+pageIndex	Integer	No	Page number, starting from 0 (Default: 0)
+pageSize	Integer	No	Page size, must be greater than 0 and less than or equal to 100 (Default: 10)
+Request example
+
+curl -X POST "https://api-spot.weex.com/api/v2/trade/history" \
+   -H "ACCESS-KEY:*******" \
+   -H "ACCESS-SIGN:*" \
+   -H "ACCESS-PASSPHRASE:*" \
+   -H "ACCESS-TIMESTAMP:1659076670000" \
+   -H "locale:zh-CN" \
+   -H "Content-Type: application/json" \
+   -d '{"symbol": "WXTUSDT_SPBL"}'
+
+
+Response parameters
+
+Field Name	Type	Field Description
+accountId	String	Account ID
+symbol	String	Trading pair
+orderId	String	Order ID
+clientOrderId	String	Client order ID
+price	String	Order price
+quantity	String	Order quantity
+orderType	String	Order type
+side	String	Order side
+status	String	Order status
+latestFillPrice	String	Latest execution price
+maxFillPrice	String	Highest execution price
+minFillPrice	String	Lowest execution price
+fillQuantity	String	Filled quantity
+fillTotalAmount	String	Total filled amount
+cTime	String	Creation time
+uTime	String	Update time
+Response example
+
+{
+  "code": "00000",
+  "msg": "success",
+  "requestTime": 1743755234949,
+  "data": {
+    "orderInfoResultList": [{
+      "accountId": "590105411156181178",
+      "symbol": "WXTUSDT_SPBL",
+      "orderId": "602941812964852154",
+      "clientOrderId": "202504040742105191743752530280",
+      "price": "100.000000",
+      "quantity": "10",
+      "orderType": "limit",
+      "side": "sell",
+      "status": "open",
+      "latestFillPrice": "0",
+      "maxFillPrice": "0",
+      "minFillPrice": "0",
+      "fillQuantity": "0",
+      "fillTotalAmount": "0",
+      "cTime": "1743752530328",
+      "uTime": "1743752530334"
+    }],
+    "nextPage": true,
+    "totals": 0
+  }
+}
+Get Fills
+HTTP request Get Fills
+
+POST /api/v2/trade/fills
+Rate limit: 10 requests/second
+
+Request parameters
+
+Parameter	Parameter type	Required?	Description
+symbol	String	Yes	Trading pair. For details, view: /products
+orderId	Long	No	Order ID
+after	Long	No	Start timestamp (in milliseconds)
+before	Long	No	End timestamp (in milliseconds)
+pageIndex	Integer	No	Page number, starting from 0 (Default: 0)
+pageSize	Integer	No	Page size, must be greater than 0 and less than or equal to 100 (Default: 10)
+Request example
+
+curl -X POST "https://api-spot.weex.com/api/v2/trade/fills" \
+   -H "ACCESS-KEY:*******" \
+   -H "ACCESS-SIGN:*******" \
+   -H "ACCESS-PASSPHRASE:*****" \
+   -H "ACCESS-TIMESTAMP:1659076670000" \
+   -H "locale:zh-CN" \
+   -H "Content-Type: application/json" \
+   -d '{"symbol": "WXTUSDT_SPBL"}'
+
+
+Response parameters
+
+Field Name	Type	Field Description
+accountId	String	Account ID
+symbol	String	Trading pair
+baseCoin	String	Base currency
+quoteCoin	String	Quote currency
+orderId	String	Order ID
+fillId	String	Trade ID
+orderType	String	Order type
+side	String	Order side
+fillPrice	String	Execution price
+fillQuantity	String	Executed quantity
+fillTotalAmount	String	Total filled amount
+fees	String	Fee
+cTime	String	Creation time
+Response example
+
+{
+  "code": "00000",
+  "msg": "success",
+  "requestTime": 1743750228305,
+  "data": {
+    "fillsOrderResultList": [{
+      "accountId": "590105411156181178",
+      "symbol": "WXTUSDT_SPBL",
+      "baseCoin": "WXT",
+      "quoteCoin": "USDT",
+      "orderId": "602929507946463674",
+      "fillId": "602929507971629498",
+      "orderType": "",
+      "side": "buy",
+      "fillPrice": "",
+      "fillQuantity": "10",
+      "fillTotalAmount": "0.10476",
+      "fees": "0.01",
+      "cTime": "1743749596589"
+    }],
+    "nextPage": false,
+    "totals": 0
+  }
+}
+Get Affiliate UIDs
+HTTP request Get Affiliate UIDs
+
+GET /api/v2/rebate/affiliate/getAffiliateUIDs
+Rate limit: 10 requests/second
+
+Request parameters
+
+Parameter	Parameter type	Required?	Description
+uid	Long	No	Invited User UID
+startTime	Long	No	Start timestamp in UTC (milliseconds)
+endTime	Long	No	End timestamp in UTC (milliseconds)
+page	Integer	No	Page number (starting from 1, default 1)
+pageSize	Integer	No	Page size (default 100)
+Request example
+
+curl "https://api-spot.weex.com/api/v2/rebate/affiliate/getAffiliateUIDs" \
+   -H "ACCESS-KEY:*******" \
+   -H "ACCESS-SIGN:*******" \
+   -H "ACCESS-PASSPHRASE:*****" \
+   -H "ACCESS-TIMESTAMP:1659076670000" \
+   -H "locale:zh-CN" \
+   -H "Content-Type: application/json"
+
+
+Response parameters
+
+Field Name	Type	Description
+uid	String	Invited User UID
+registerTime	String	Registration timestamp, unit: milliseconds
+kycResult	Boolean	KYC status
+inviteCode	String	Invitation Code
+firstDeposit	String	First Deposit Time
+firstTrade	String	First Trade Time
+lastDeposit	String	Last Deposit Time
+lastTrade	String	Last Trade Time
+Response example
+
+{
+  "code": "200",
+  "data": {
+    "pages": 1,
+    "pageSize": 100,
+    "total": 98,
+    "channelUserInfoItemList": [{
+      "uid": "3066862172",
+      "registerTime": "1749797913000",
+      "kycResult": false,
+      "inviteCode": "3lft",
+      "firstTrade": "1738767425000",
+      "lastTrade": "1744115178000"
+    }]
+  },
+  "timestamp": 1756101221336
+}
+
+Previous
+Get Fills
+Next
+Get Affiliate Referral Data
+Get Affiliate Referral Data
+HTTP request Direct Customer Trading Volume and Capital Analytics
+
+GET /api/v2/rebate/affiliate/getChannelUserTradeAndAsset
+Rate limit: 10 requests/second
+
+Request parameters
+
+Parameter	Parameter type	Required?	Description
+uid	Long	No	Invited User UID
+startTime	Long	No	Start timestamp in UTC (milliseconds)
+endTime	Long	No	End timestamp in UTC (milliseconds)
+page	Integer	No	Page number (starting from 1, default 1)
+pageSize	Integer	No	Page size (default 100)
+Request example
+
+curl "https://api-spot.weex.com/api/v2/rebate/affiliate/getChannelUserTradeAndAsset" \
+   -H "ACCESS-KEY:*******" \
+   -H "ACCESS-SIGN:*******" \
+   -H "ACCESS-PASSPHRASE:*****" \
+   -H "ACCESS-TIMESTAMP:1659076670000" \
+   -H "locale:zh-CN" \
+   -H "Content-Type: application/json"
+
+
+Response parameters
+
+Field Name	Type	Description
+uid	String	Invited User UID
+depositAmount	String	Deposit Amount
+withdrawalAmount	String	Withdrawal Amount
+spotTradingAmount	String	Spot Trading Volume
+futuresTradingAmount	String	Futures Trading Volume
+commission	String	Commission
+Response example
+
+{
+  "code": "200",
+  "data": {
+    "pages": 1,
+    "pageSize": 100,
+    "total": 98,
+    "records": [
+      {
+        "uid": "3066862172",
+        "depositAmount": "0",
+        "withdrawalAmount": "0",
+        "spotTradingAmount": "0",
+        "futuresTradingAmount": "0",
+        "commission": "0"
+      }
+    ]
+  },
+  "timestamp": 1756102550140
+}
+WebSocket API
+Overview
+WebSocket is a new protocol in HTML5 that enables full-duplex communication between clients and servers, allowing rapid bidirectional data transmission. Through a simple handshake, a connection can be established between client and server, enabling the server to actively push information to the client based on business rules. Its advantages include:
+
+Small header size (~2 bytes) during data transmission between client and server
+Both client and server can actively send data
+Eliminates the need for repeated TCP connection setup/teardown, conserving bandwidth and server resources
+Strongly recommended for developers to obtain market data, order book depth, and other information
+Domain	WebSocket API	Recommended Use
+Public Channel	wss://ws-spot.weex.com/v2/ws/public	Primary domain, public channels
+Private Channel	wss://ws-spot.weex.com/v2/ws/private	Primary domain, private channels
+Connection
+Connection Specifications:
+
+Connection limit: 300 connection requests/IP/5 minutes, maximum 100 concurrent connections per IP
+Subscription limit: 240 operations/hour/connection, maximum 100 channels per connection
+Private channel requirement: Private channel connections require header authentication
+To maintain stable and effective connections, we recommend:
+
+After successful WebSocket connection establishment, the server will periodically send Ping messages to the client in the format: {"event":"ping","time":"1693208170000"}, where "time" represents the server's timestamp. Upon receiving this message, the client should respond with a Pong message: {"event":"pong","time":"1693208170000"}. The server will actively terminate connections that fail to respond more than 5 times.
+
+Header Authentication for Private Channels
+ACCESS-KEY: Unique identifier for API user authentication (requires application)
+
+ACCESS-PASSPHRASE: Password for the API Key
+
+ACCESS-TIMESTAMP: Unix Epoch timestamp in milliseconds (expires after 30 seconds, must match signature timestamp)
+
+ACCESS-SIGN: Signature string generated as follows:
+
+The message (string to be signed) consists of: timestamp + requestPath
+
+Example timestamp (in milliseconds): const timestamp = '' + Date.now()
+
+Where requestPath is /v2/ws/private
+
+Signature Generation Process
+
+Encrypt the message string using HMAC SHA256 with the secret key:
+Signature = hmac_sha256(secretkey, Message)
+Encode the Signature using Base64:
+Signature = base64.encode(Signature)
+Subscription
+Subscription Specification:
+
+{
+  "event": "subscribe",
+  "channel": "channel_name"
+}
+
+Unsubscription
+Unsubscription Specification:
+
+{
+   "event": "unsubscribe",
+   "channel": "channel_name"
+}
+Market Channel
+Description
+Retrieves real-time market data including latest price, best bid/ask prices, and 24-hour trading volume. Updates occur within 100-300ms when changes occur (trades, bid/ask updates).
+
+Request Parameters
+
+Parameter	Type	Required	Description
+event	String	Yes	Operation: subscribe / unsubscribe
+channel	String	Yes	Channel name.format: ticker.{contractId}
+Example: ticker.BTCUSDT_SPBL
+Request Example
+
+{  
+  "event": "subscribe",  
+  "channel": "ticker.BTCUSDT_SPBL"  
+}
+
+Response Parameters
+
+Field	Type	Description
+event	String	Operation: subscribed / unsubscribed
+channel	String	Channel name (e.g. ticker.BTCUSDT_SPBL)
+Subscription Response Example
+
+{  
+  "event": "subscribed",  
+  "channel": "ticker.BTCUSDT_SPBL"  
+}  
+
+Push Data Parameters
+
+Field	Type	Description
+event	String	Push action
+channel	String	Channel name (e.g. ticker.BTCUSDT_SPBL)
+data	List	Market data array
+>symbol	String	Product ID
+>priceChange	String	Price change amount
+>priceChangePercent	String	Price change percentage
+>trades	String	24h trade count
+>size	String	24h trading volume
+>value	String	24h trading value
+>high	String	24h highest price
+>low	String	24h lowest price
+>lastPrice	String	Latest traded price
+>markPrice	String	Current mark price
+Push Data Example
+
+{
+  "event": "payload",
+  "channel": "ticker.BTCUSDT_SPBL",
+  "data": [
+    {
+      "symbol": "BTCUSDT_SPBL",
+      "priceChange": "325.3",
+      "priceChangePercent": "0.003100",
+      "trades": "20894",
+      "size": "15930.189169",
+      "value": "1670098071.4896045",
+      "high": "106500.0",
+      "low": "93128.9",
+      "lastPrice": "105252.1",
+      "markPrice": "0"
+    }
+  ]
+}
+Candlestick Channel
+Description
+Order K-line channel
+
+Request Parameters
+
+Parameter	Type	Required	Description
+event	String	Yes	Operation: subscribe / unsubscribe
+channel	String	Yes	Channel name.format: kline.{priceType}.{contractId}.{interval}
+Example: kline.LAST_PRICE.BTCUSDT_SPBL.MINUTE_1
+priceType Parameters
+
+Value	Description
+LAST_PRICE	Latest price K-line
+MARK_PRICE	Mark price K-line
+interval Parameters
+
+Value	Description
+MINUTE_1	1-minute
+MINUTE_5	5-minute
+MINUTE_15	15-minute
+MINUTE_30	30-minute
+HOUR_1	1-hour
+HOUR_2	2-hour
+HOUR_4	4-hour
+HOUR_6	6-hour
+HOUR_8	8-hour
+HOUR_12	12-hour
+DAY_1	Daily
+WEEK_1	Weekly
+MONTH_1	Monthly
+Request Example
+
+{  
+  "event": "subscribe",  
+  "channel": "kline.LAST_PRICE.BTCUSDT_SPBL.MINUTE_1"  
+}  
+Depth Channel
+Description
+
+Retrieves order book depth data
+
+Upon successful subscription, a full snapshot will be pushed initially (depthType=SNAPSHOT), followed by incremental updates (depthType=CHANGED).
+
+Request Parameters
+
+Parameter	Type	Required	Description
+event	String	Yes	Operation: subscribe / unsubscribe
+channel	String	Yes	Channel name.format: depth.{contractId}.{depth}
+Example: depth.BTCUSDT_SPBL.15
+depth Parameters
+
+Value	Description
+15	15 levels
+200	200 levels
+Request Example
+
+{  
+  "event": "subscribe",  
+  "channel": "depth.BTCUSDT_SPBL.15"  
+}  
+
+Response Parameters
+
+Field	Type	Description
+event	String	Operation: subscribed / unsubscribed
+channel	String	Channel name
+Subscription Response Example
+
+{  
+  "event": "subscribed",  
+  "channel": "depth.BTCUSDT_SPBL.15"  
+}  
+
+Push Data Parameters
+
+Field	Type	Description
+event	String	Push action
+channel	String	Channel name
+data	List	Subscribed data
+>startVersion	String	Starting order book version
+>endVersion	String	Ending order book version
+>level	String	Depth level
+>depthType	String	Order book depth type
+>symbol	String	Product ID
+>asks	String	Ask list
+>>price	String	Price level
+>>size	String	Quantity at price level
+>bids	String	Bid list
+>>price	String	Price level
+>>size	String	Quantity at price level
+Push Data Example
+
+{  
+  "event": "payload",  
+  "channel": "depth.BTCUSDT_SPBL.15",  
+  "data": [  
+    {  
+      "startVersion": "3644174246",  
+      "endVersion": "3644174270",  
+      "level": 15,  
+      "depthType": "CHANGED",  
+      "symbol": "BTCUSDT_SPBL",  
+      "asks": [  
+        {  
+          "price": "103436.1",  
+          "size": "0.91500"  
+        },  
+        {  
+          "price": "103436.3",  
+          "size": "1.95800"  
+        },  
+        {  
+          "price": "103436.5",  
+          "size": "0"  
+        },  
+        {  
+          "price": "103436.6",  
+          "size": "1.08300"  
+        },  
+        {  
+          "price": "103436.7",  
+          "size": "7.64700"  
+        },  
+        {  
+          "price": "103436.9",  
+          "size": "7.23100"  
+        },  
+        {  
+          "price": "103437.0",  
+          "size": "0"  
+        },  
+        {  
+          "price": "103437.2",  
+          "size": "0"  
+        }  
+      ],  
+      "bids": [  
+        {  
+          "price": "103435.9",  
+          "size": "2.40500"  
+        },  
+        {  
+          "price": "103435.7",  
+          "size": "0"  
+        },  
+        {  
+          "price": "103435.6",  
+          "size": "0.32700"  
+        },  
+        {  
+          "price": "103435.5",  
+          "size": "0"  
+        },  
+        {  
+          "price": "103435.2",  
+          "size": "3.19400"  
+        },  
+        {  
+          "price": "103434.8",  
+          "size": "10.25000"  
+        },  
+        {  
+          "price": "103434.5",  
+          "size": "11.13900"  
+        }  
+      ]  
+    }  
+  ]  
+}  
+Public Trade Channel
+Description
+
+Platform trade channel (taker orders)
+
+Request Parameters
+
+Parameter	Type	Required	Description
+event	String	Yes	Operation: subscribe, unsubscribe
+channel	String	Yes	Channel name. Product ID
+e.g., trades.BTCUSDT_SPBL
+Request Example
+
+{  
+  "event": "subscribe",  
+  "channel": "trades.BTCUSDT_SPBL"  
+}  
+
+Response Parameters
+
+Field	Type	Description
+event	String	Operation: subscribed, unsubscribed
+channel	String	Channel name
+Subscription Response Example
+
+{  
+  "event": "subscribed",  
+  "channel": "trades.BTCUSDT_SPBL"  
+}  
+
+Push Data Parameters
+
+Field	Type	Description
+event	String	Push data action
+channel	String	Channel name
+data	List	Subscribed data
+>time	String	Trade time
+>price	String	Trade price
+>size	String	Trade quantity
+>value	String	Trade amount
+>buyerMaker	String	Market flag (internal/external)
+Push Response Example
+
+{
+  "event": "payload",
+  "channel": "trades.BTCUSDT_SPBL",
+  "data": [
+    {
+      "time": "1747131727502",
+      "price": "103337.5",
+      "size": "0.01600",
+      "value": "1653.400000",
+      "buyerMaker": false
+    }
+  ]
+}
+Account Channel
+Description
+
+Subscribe to the account channel
+
+Request Parameters
+
+Parameter	Type	Required	Description
+event	String	Yes	Operation: subscribe, unsubscribe
+channel	String	Yes	Channel name
+Request Example
+
+{  
+  "event": "subscribe",  
+  "channel": "account"  
+}  
+
+Response Parameters
+
+Field	Type	Description
+event	String	Operation: subscribed, unsubscribed
+channel	String	Channel name
+Subscription Response Example
+
+{  
+  "event": "subscribed",  
+  "channel": "account"  
+}  
+
+Push Data Parameters
+
+Field	Type	Description
+coinId	String	Currency ID
+coinName	String	Currency Name
+equity	String	Total Equity
+available	String	Available Balance
+frozen	String	Frozen Balance
+全部翻译为英文
+
+Push Response Example
+
+{
+  "type": "trade-event",
+  "msg": {
+    "msgEvent": "OrderUpdate",
+    "version": 38,
+    "data": {
+      "accountAsset": [
+        {
+          "coinId": 1,
+          "coinName": "BTC",
+          "equity": "3.042645318000",
+          "available": "3.042645318000",
+          "frozen": "0"
+        },
+        {
+          "coinId": 2,
+          "coinName": "USDT",
+          "equity": "79789.075015800",
+          "available": "79789.075015800",
+          "frozen": "0"
+        }
+      ]
+    },
+    "time": 1749044695720
+  },
+  "channel": "account",
+  "event": "payload"
+}  
+Fill Channel
+Description
+
+Subscribe to trade details information
+
+Request Parameters
+
+Parameter	Type	Required	Description
+event	String	Yes	Operation: subscribe, unsubscribe
+channel	String	Yes	Channel name
+Request Example
+
+{  
+  "event": "subscribe",  
+  "channel": "fill"  
+}  
+
+Response Parameters
+
+Field	Type	Description
+event	String	Operation: subscribed, unsubscribed
+channel	String	Channel name
+Subscription Response Example
+
+{  
+  "event": "subscribed",  
+  "channel": "fill"  
+}  
+
+Push Data Parameters
+
+Field	Type	Description
+id	String	Unique identifier
+symbolName	String	Trading pair name
+orderId	String	Parent order ID
+baseCoin	String	Base currency
+quoteCoin	String	Quote currency
+orderSide	String	Buy/Sell direction
+fillSize	String	Actual executed quantity
+fillValue	String	Actual executed value
+fillFee	String	Actual transaction fee (exact)
+direction	String	Execution direction
+createdTime	String	Creation time
+updatedTime	String	Update time
+Push Response Example
+
+{
+  "type": "trade-event",
+  "channel": "fill",
+  "msg": {
+    "msgEvent": "OrderUpdate",
+    "version": 38,
+    "data": {
+      "orderFillTransaction": [
+        {
+          "id": "625138763437179034",
+          "symbolName": "BTCUSDT_SPBL",
+          "baseCoin": "BTC",
+          "quoteCoin": "USDT",
+          "orderId": "625138763307155610",
+          "orderSide": "BUY",
+          "fillSize": "0.000952",
+          "fillValue": "99.9676160",
+          "fillFee": "0.00000095",
+          "direction": "TAKER",
+          "createdTime": "1749044695720",
+          "updatedTime": "1749044695720"
+        }
+      ]
+    },
+    "time": 1749044695720
+  },
+  "event": "payload"
+}
+Order Channel
+Description
+
+Subscribe to order channel
+
+Request Parameters
+
+Parameter	Type	Required	Description
+event	String	Yes	Operation: subscribe, unsubscribe
+channel	String	Yes	Channel name
+Request Example
+
+{  
+  "event": "subscribe",  
+  "channel": "orders"  
+}  
+
+Response Parameters
+
+Field	Type	Description
+event	String	Operation: subscribed, unsubscribed
+channel	String	Channel name
+Subscription Response Example
+
+{  
+  "event": "subscribed",  
+  "channel": "orders"  
+}  
+
+Push Data Parameters
+
+Field	Type	Description
+Return Field	Parameter Type	Field Description
+:------------------------	:--------------	:-----------------------------------------------------------------------------------------------------
+id	String	Order ID (value > 0)
+symbolName	String	Trading pair name
+baseCoin	String	Base currency
+quoteCoin	String	Quote currency
+orderSide	String	Order direction (BUY/SELL)
+price	String	Order price (worst acceptable price)
+size	String	Order quantity
+value	String	Order value
+clientOrderId	String	Client-defined ID (for idempotency verification)
+type	String	Order type
+timeInForce	String	Order execution strategy (valid when type is LIMIT/STOP_LIMIT/TAKE_PROFIT_LIMIT)
+reduceOnly	String	Whether reduce-only order
+triggerPrice	String	Trigger price (valid for STOP_LIMIT/STOP_MARKET/TAKE_PROFIT_LIMIT/TAKE_PROFIT_MARKET). 0 means empty.
+orderSource	String	Order source
+openTpslParentOrderId	String	Opening order ID for take-profit/stop-loss orders
+isSetOpenTp	String	Whether take-profit is set for opening
+openTpParam	String	Take-profit parameters for opening
+isSetOpenSl	String	Whether stop-loss is set for opening
+openSlParam	String	Stop-loss parameters for opening
+takerFeeRate	String	Taker fee rate when placing order
+makerFeeRate	String	Maker fee rate when placing order
+feeDiscount	String	Fee discount rate when placing order
+liquidateFeeRate	String	Liquidation fee rate when placing order
+status	String	Order status
+triggerTime	String	Conditional order trigger time
+triggerPriceTime	String	Conditional order trigger price time
+triggerPriceValue	String	Conditional order trigger price value
+cancelReason	String	Order cancellation reason
+latestFillPrice	String	Latest execution price of current order
+maxFillPrice	String	Highest execution price of current order
+minFillPrice	String	Lowest execution price of current order
+cumFillSize	String	Cumulative filled quantity after matching
+cumFillValue	String	Cumulative filled value after matching
+cumFillFee	String	Cumulative filled fees after matching
+createdTime	String	Creation time
+updatedTime	String	Update time
+Push Response Example
+
+{
+  "type": "trade-event",
+  "channel": "orders",
+  "msg": {
+    "msgEvent": "OrderUpdate",
+    "version": 38,
+    "data": {
+      "order": [
+        {
+          "id": "625138763307155610",
+          "symbolName": "BTCUSDT_SPBL",
+          "baseCoin": "BTC",
+          "quoteCoin": "USDT",
+          "orderSide": "BUY",
+          "price": "0",
+          "size": "0",
+          "value": "100.0000000",
+          "clientOrderId": "1749044695347g1xrdKa2xuDzbDHgTTkbubUoRd3x7s9c2I2mdtdj5qt7M6Evz5m",
+          "type": "MARKET",
+          "timeInForce": "IMMEDIATE_OR_CANCEL",
+          "reduceOnly": false,
+          "triggerPrice": "0",
+          "orderSource": "UNKNOWN_ORDER_SOURCE",
+          "openTpslParentOrderId": "0",
+          "isSetOpenTp": false,
+          "isSetOpenSl": false,
+          "takerFeeRate": "0.001",
+          "makerFeeRate": "0",
+          "feeDiscount": "1",
+          "takerFeeDiscount": "1",
+          "makerFeeDiscount": "1",
+          "status": "FILLED",
+          "triggerTime": "0",
+          "triggerPriceTime": "0",
+          "triggerPriceValue": "0",
+          "cancelReason": "UNKNOWN_ORDER_CANCEL_REASON",
+          "latestFillPrice": "105008.0",
+          "maxFillPrice": "105008.0",
+          "minFillPrice": "105008.0",
+          "cumFillSize": "0.000952",
+          "cumFillValue": "99.9676160",
+          "cumFillFee": "0.00000095",
+          "createdTime": "1749044695689",
+          "updatedTime": "1749044695720"
+        }
+      ]
+    },
+    "time": 1749044695720
+  },
+  "event": "payload"
+}
+Common Error Code
+Error Message	Error Code	HTTP Status Code
+Header "ACCESS_KEY" is required	40001	400
+Header "ACCESS_SIGN" is required	40002	400
+Header "ACCESS_TIMESTAMP" is required	40003	400
+Invalid ACCESS_TIMESTAMP	40005	400
+Invalid ACCESS_KEY	40006	400
+Invalid Content_Type, use "application/json" format	40007	400
+Request timestamp expired	40008	400
+API verification failed	40009	400
+Too many requests	429	429
+Header "ACCESS_PASSPHRASE" is required	40011	400
+Incorrect API key/Passphrase	40012	400
+Account frozen	40013	400
+Invalid permissions	40014	400
+System error	40015	400
+Account must be linked to a mobile number or Google account	40015	400
+Parameter validation failed	40017	400
+Invalid IP request	40018	40
+
+Spot Trading Error Code
+Error Message	Error Code	HTTP Status Code
+Batch cancel limit exceeded (max 50 orders)	40912	400
+Either orderId or clientId is required	40913	400
+Trading pair configuration does not exist	40102	400
+The server is being upgraded. Please try again later.	40200	400
+client_oid exceeds 40 characters or is in an invalid format	40305	400
+Incorrect format	40409	400
+Only the last three months of historical data are accessible	40704	400
+Start time has a greater value than the end time	40707	400
+Empty parameter	40724	400
+Server returns an error response	40725	400
+Order does not exist	43001	400
+Failed to place order	43002	400
+There are no orders that can be canceled.	43004	400
+Order quantity exceeds maximum order limit	43005	400
+Amount is less than the minimum order amount	43006	400
+Amount exceeds maximum order amount	43007	400
+The current order price cannot be lower than 0	43007	400
+The current order price exceeds the limit of 0	43009	400
+
+
+
+Get Internal Withdrawal Status
+HTTP request Get Internal Withdrawal Status
+
+GET /api/v2/rebate/affiliate/getInternalWithdrawalStatus
+Rate limit: 10 requests/second
+
+Request parameters
+
+Parameter	Parameter Type	Required	Description
+withdrawID	String	No	Withdraw ID
+coin	String	No	Currency type (USDT, BTC)
+startTime	Long	No	Start timestamp in UTC (milliseconds)
+(Only data from the past month can be queried)
+endTime	Long	No	End timestamp in UTC (milliseconds)
+(Only data from the past month can be queried)
+fromAccountType	String	No	Selected withdrawal account type
+(SPOT: spot wallet, SPOT_V2: spot pro wallet, FUND: fund wallet)
+toAccountType	String	No	Selected receiving account type
+(SPOT: spot wallet, SPOT_V2: spot pro wallet, FUND: fund wallet)
+page	Integer	No	Page number (starting from 1, default 1)
+pageSize	Integer	No	Page size (default 100, max 200)
+Request example
+
+curl "https://api-spot.weex.com/api/v2/rebate/affiliate/getInternalWithdrawalStatus" \
+   -H "ACCESS-KEY:*******" \
+   -H "ACCESS-SIGN:*******" \
+   -H "ACCESS-PASSPHRASE:*****" \
+   -H "ACCESS-TIMESTAMP:1659076670000" \
+   -H "locale:zh-CN" \
+   -H "Content-Type: application/json"
+
+
+Response parameters
+
+Field Name	Type	Description
+fromUserId	Long	Transfer out User ID
+toUserId	Long	Transfer in User ID
+withdrawId	String	Withdraw ID
+coin	String	USDT, BTC ...
+status	String	Possible values:
+SUCCESS
+FAILED
+PROGRESSING: Processing
+amount	String	Transfer amount
+createTime	Long	Withdraw created timestamp (ms)
+updateTime	Long	Withdraw updated timestamp (ms)
+
+Internal Withdrawal
+HTTP request Internal Withdrawal
+
+POST /api/v2/rebate/affiliate/internalWithdrawal
+Rate limit: 10 requests/second
+
+Request parameters
+
+Parameter	Parameter Type	Required	Description
+toUserId	Long	Yes	Transfer-in user ID
+coin	String	Yes	Currency type (USDT, BTC)
+amount	String	Yes	Transfer amount (Up to 6 decimal places)
+fromAccountType	String	Yes	Selected withdrawal account type (SPOT: spot wallet, SPOT_V2: spot pro wallet, FUND: fund wallet)
+toAccountType	String	Yes	Selected receiving account type (SPOT: spot wallet, SPOT_V2: spot pro wallet, FUND: fund wallet)
+Request example
+
+curl -X POST "https://api-spot.weex.com/api/v2/rebate/affiliate/internalWithdrawal" \
+   -H "ACCESS-KEY:*******" \
+   -H "ACCESS-SIGN:*******" \
+   -H "ACCESS-PASSPHRASE:*****" \
+   -H "ACCESS-TIMESTAMP:1659076670000" \
+   -H "locale:zh-CN" \
+   -H "Content-Type: application/json" \
+   -d '{
+	"toUserId": "11111111",
+	"coin": "USDT",
+	"amount": "1",
+	"fromAccountType": "SPOT",
+	"toAccountType": "SPOT"
+}'
+
+
+Response parameters
+
+Field Name	Type	Description
+id	String	Withdrawal ID
+Response example
+
+{
+  "code": "200",
+  "id": "1295851890224222208",
+  "timestamp": 1744681087121
+}
+Get Subaffiliates Data (affiliate only)
+HTTP Request Query Sub-Affiliate Trading Volume, Fees, and Commission Data (Affiliate Account)
+
+POST /api/v2/rebate/affiliate/querySubChannelTransactions
+Rate Limit: 10 requests/1s
+
+Request Parameters
+
+Parameter	Parameter Type	Required	Description
+subUid	Long	No	Sub-affiliate's UID
+startTime	Long	No	Start timestamp (UTC milliseconds)
+endTime	Long	No	End timestamp (UTC milliseconds)
+productType	String	Yes	Product type (SPOT or FUTURES)
+pageNum	Integer	No	Page number (starts from 1, default 1)
+pageSize	Integer	No	Items per page (default 100)
+Request Example
+
+curl -X POST "https://api-spot.weex.com/api/v2/rebate/affiliate/querySubChannelTransactions" \
+   -H "ACCESS-KEY:*******" \
+   -H "ACCESS-SIGN:*******" \
+   -H "ACCESS-PASSPHRASE:*****" \
+   -H "ACCESS-TIMESTAMP:1659076670000" \
+   -H "locale:zh-CN" \
+   -H "Content-Type: application/json" \
+   -d '{
+    "startTime": null,
+    "endTime": null,
+    "productType": "FUTURES"
+}'
+
+
+Response Parameters
+
+Field Name	Type	Description
+subAffiliateUid	String	Sub-affiliate ID
+productType	String	Product Type
+date	String	Date
+tradingVolume	String	Total Trading Volume
+netTradingFee	String	Net Trading Fee Collected by Platform
+paidCommission	String	Actual Rebate Amount
+Response Example
+
+{
+  "code": "00000",
+  "msg": "success",
+  "requestTime": 1756084752479,
+  "data": {
+    "records": [
+      {
+        "subAffiliateUid": "6424873609",
+        "productType": "FUTURES",
+        "date": "2025-08-20",
+        "tradingVolume": "2698.099",
+        "netTradingFee": "1.70343",
+        "paidCommission": "1.362744"
+      }
+    ],
+    "total": 1,
+    "size": 10,
+    "current": 1,
+    "pages": 1
+  }
+}
+Get Affiliate UIDs
+HTTP request Get Affiliate UIDs
+
+GET /api/v2/rebate/affiliate/getAffiliateUIDs
+Rate limit: 10 requests/second
+
+Request parameters
+
+Parameter	Parameter type	Required?	Description
+uid	Long	No	Invited User UID
+startTime	Long	No	Start timestamp in UTC (milliseconds)
+endTime	Long	No	End timestamp in UTC (milliseconds)
+page	Integer	No	Page number (starting from 1, default 1)
+pageSize	Integer	No	Page size (default 100)
+Request example
+
+curl "https://api-spot.weex.com/api/v2/rebate/affiliate/getAffiliateUIDs" \
+   -H "ACCESS-KEY:*******" \
+   -H "ACCESS-SIGN:*******" \
+   -H "ACCESS-PASSPHRASE:*****" \
+   -H "ACCESS-TIMESTAMP:1659076670000" \
+   -H "locale:zh-CN" \
+   -H "Content-Type: application/json"
+
+
+Response parameters
+
+Field Name	Type	Description
+uid	String	Invited User UID
+registerTime	String	Registration timestamp, unit: milliseconds
+kycResult	Boolean	KYC status
+inviteCode	String	Invitation Code
+firstDeposit	String	First Deposit Time
+firstTrade	String	First Trade Time
+lastDeposit	String	Last Deposit Time
+lastTrade	String	Last Trade Time
+Response example
+
+{
+  "code": "200",
+  "data": {
+    "pages": 1,
+    "pageSize": 100,
+    "total": 98,
+    "channelUserInfoItemList": [{
+      "uid": "3066862172",
+      "registerTime": "1749797913000",
+      "kycResult": false,
+      "inviteCode": "3lft",
+      "firstTrade": "1738767425000",
+      "lastTrade": "1744115178000"
+    }]
+  },
+  "timestamp": 1756101221336
+}
+Trading volume cannot be less than 0	43010	400
+The current order price cannot be lower than 0	43011	400

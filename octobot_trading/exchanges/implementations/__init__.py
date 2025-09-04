@@ -26,9 +26,19 @@ from octobot_trading.exchanges.implementations import exchange_simulator
 from octobot_trading.exchanges.implementations.exchange_simulator import (
     ExchangeSimulator,
 )
+from octobot_trading.exchanges.implementations import weex_exchange
+from octobot_trading.exchanges.implementations.weex_exchange import (
+    WeexExchange,
+)
+from octobot_trading.exchanges.implementations import weex_websocket
+from octobot_trading.exchanges.implementations.weex_websocket import (
+    WeexWebSocketExchange,
+)
 
 __all__ = [
     "DefaultWebSocketExchange",
     "DefaultRestExchange",
     "ExchangeSimulator",
+    "WeexExchange",
+    "WeexWebSocketExchange",
 ]
