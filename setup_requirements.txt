@@ -1,0 +1,24 @@
+numpy==1.26.3
+
+# Drakkar-Software requirements
+OctoBot-Backtesting>=1.9, <1.10
+Async-Channel>=2.2, <2.3
+OctoBot-Commons>=1.9.82, <1.10
+OctoBot-Tentacles-Manager>=2.9, <2.10
+
+# Packaging - flexible version to avoid conflicts
+packaging>=23.2,<26.0
+
+# Note: trading-backend and ccxt are installed separately via Git URLs
+# These are installed by the install_dependencies.py script or requirements.txt
+
+cryptography # Never specify a version (managed by https://github.com/Drakkar-Software/OctoBot-PyPi-Linux-Deployer)
+
+# OrderBook requirement
+sortedcontainers==2.4.0
+
+# Scripting requirements
+tinydb==4.5.2
+
+# Caching
+cachetools>=5.5.0, <6

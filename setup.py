@@ -25,7 +25,11 @@ PACKAGES = find_packages(exclude=["tests"])
 with open('README.md', encoding='utf-8') as f:
     DESCRIPTION = f.read()
 
-REQUIRED = open('requirements.txt').readlines()
+# Read setup-compatible requirements (no Git URLs)
+with open('setup_requirements.txt', 'r', encoding='utf-8') as f:
+    SETUP_REQUIRED = [line.strip() for line in f.readlines() 
+                     if line.strip() and not line.strip().startswith('#')]
+
 REQUIRES_PYTHON = '>=3.8'
 
 setup(
@@ -35,15 +39,16 @@ setup(
     license='LGPL-3.0',
     author='Drakkar-Software',
     author_email='contact@drakkar.software',
-    description='OctoBot project trading package',
+    description='OctoBot project trading package with WEEX exchange support',
     packages=PACKAGES,
     include_package_data=True,
     long_description=DESCRIPTION,
+    long_description_content_type='text/markdown',
     tests_require=["pytest"],
     test_suite="tests",
     zip_safe=False,
     data_files=[],
-    install_requires=REQUIRED,
+    install_requires=SETUP_REQUIRED,
     python_requires=REQUIRES_PYTHON,
     classifiers=[
         'Development Status :: 5 - Production/Stable',
