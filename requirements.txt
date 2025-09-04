@@ -5,10 +5,11 @@ OctoBot-Backtesting>=1.9, <1.10
 Async-Channel>=2.2, <2.3
 OctoBot-Commons>=1.9.82, <1.10
 OctoBot-Tentacles-Manager>=2.9, <2.10
-trading-backend>=1.2.35
+# Custom trading-backend from GitHub
+git+https://github.com/Danijel-Enoch/trading-backend.git
 
-# Exchange connection requirements
-ccxt==4.5.0 # always ensure real exchanges tests (in tests_additional and authenticated exchange tests) are passing before changing the ccxt version
+# Exchange connection requirements - Custom CCXT from GitHub
+git+https://github.com/Danijel-Enoch/ccxt.git@master#subdirectory=python # Custom CCXT with WEEX exchange support
 
 cryptography # Never specify a version (managed by https://github.com/Drakkar-Software/OctoBot-PyPi-Linux-Deployer)
 
