@@ -16,6 +16,7 @@
 
 import octobot_trading.enums as trading_enums
 import octobot_trading.exchanges.types.websocket_exchange as websocket_exchange
+import octobot_trading.exchanges.connectors.ccxt.ccxt_websocket_connector as ccxt_websocket_connector
 
 
 class WeexWebSocketExchange(websocket_exchange.WebSocketExchange):
@@ -42,6 +43,32 @@ class WeexWebSocketExchange(websocket_exchange.WebSocketExchange):
     @classmethod
     def is_supporting_exchange(cls, exchange_candidate_name) -> bool:
         return cls.get_name() == exchange_candidate_name.lower()
+
+    @classmethod
+    def get_exchange_connector_class(cls, exchange_manager):
+        """
+        Return the CCXT WebSocket connector class for WEEX
+        """
+        return ccxt_websocket_connector.CCXTWebsocketConnector
+
+    def create_feeds(self):
+        """
+        Create WEEX WebSocket feeds using the CCXT connector
+        """
+        try:
+            connector = self.websocket_connector(
+                config=self.config, 
+                exchange_manager=self.exchange_manager,
+                websocket_name=self.websocket_connector.get_name()
+            )
+            connector.initialize(
+                pairs=self.pairs, 
+                time_frames=self.time_frames, 
+                channels=self.channels
+            )
+            self.websocket_connectors.append(connector)
+        except ValueError as e:
+            self.logger.exception(e, True, f"Failed to create WEEX feed : {e}")
 
     def get_websocket_endpoints(self) -> dict:
         """
